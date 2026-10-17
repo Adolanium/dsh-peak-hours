@@ -1,0 +1,8 @@
+# dsh-peak-hours — bundle declaration.
+#
+# One Host entry; the same Loader entry also carries the browser half declared
+# by package.json's `dsh.client`, which the Web client loads lazily and which
+# contributes the composer-bar badge and its detail popover.
+- insert:
+    - id: peak-hours
+      name: dsh-peak-hours

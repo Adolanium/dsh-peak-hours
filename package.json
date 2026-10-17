@@ -1,0 +1,64 @@
+{
+  "name": "dsh-peak-hours",
+  "version": "0.1.0",
+  "description": "Peak and off-peak awareness for DeepSeek Harness: a live composer badge with the time left in the current pricing window, converted to your own timezone. Community plugin, not official.",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": {
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "default": "./lib/client.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml",
+    "scripts",
+    "test",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "assets"
+  ],
+  "scripts": {
+    "test": "node --test"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-conversation"
+      ]
+    }
+  },
+  "engines": {
+    "node": ">=20",
+    "dsh": ">=0.2.1-rc.1"
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "dsh-plugin",
+    "cordis-plugin",
+    "peak",
+    "off-peak",
+    "pricing",
+    "timezone"
+  ],
+  "author": "Adolanium",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Adolanium/dsh-peak-hours.git"
+  },
+  "homepage": "https://github.com/Adolanium/dsh-peak-hours#readme",
+  "bugs": {
+    "url": "https://github.com/Adolanium/dsh-peak-hours/issues"
+  }
+}

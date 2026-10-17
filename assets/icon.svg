@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Peak Hours">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#171C26"/>
+      <stop offset="1" stop-color="#080A0F"/>
+    </linearGradient>
+    <linearGradient id="amber" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F7AD31"/>
+      <stop offset="1" stop-color="#F59E0B"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="512" height="512" rx="116" fill="url(#bg)"/>
+  <rect x="1" y="1" width="510" height="510" rx="115" fill="none" stroke="#FFFFFF" stroke-opacity=".07"/>
+    <circle cx="256" cy="256" r="140" fill="none" stroke="#2B313C" stroke-width="24"/>
+
+  <g stroke="#3A4150" stroke-linecap="round">
+    <line x1="256" y1="88"  x2="256" y2="100" stroke-width="5" stroke-opacity="1"/>
+    <line x1="424" y1="256" x2="412" y2="256" stroke-width="5" stroke-opacity="1"/>
+    <line x1="256" y1="424" x2="256" y2="412" stroke-width="5" stroke-opacity="1"/>
+    <line x1="88"  y1="256" x2="100" y2="256" stroke-width="5" stroke-opacity="1"/>
+    <line x1="340" y1="116" x2="333" y2="126" stroke-width="3" stroke-opacity=".55"/>
+    <line x1="396" y1="172" x2="386" y2="179" stroke-width="3" stroke-opacity=".55"/>
+    <line x1="396" y1="340" x2="386" y2="333" stroke-width="3" stroke-opacity=".55"/>
+    <line x1="340" y1="396" x2="333" y2="386" stroke-width="3" stroke-opacity=".55"/>
+    <line x1="172" y1="396" x2="179" y2="386" stroke-width="3" stroke-opacity=".55"/>
+    <line x1="116" y1="340" x2="126" y2="333" stroke-width="3" stroke-opacity=".55"/>
+    <line x1="116" y1="172" x2="126" y2="179" stroke-width="3" stroke-opacity=".55"/>
+    <line x1="172" y1="116" x2="179" y2="126" stroke-width="3" stroke-opacity=".55"/>
+  </g>
+
+  <g fill="none" stroke="url(#amber)" stroke-width="24" stroke-linecap="round">
+    <path d="M 377.2 186 A 140 140 0 0 1 391.2 292.2"/>
+    <path d="M 355.0 355.0 A 140 140 0 0 1 219.8 391.2"/>
+  </g>
+
+  <circle cx="124.4" cy="303.9" r="13" fill="#22C55E" stroke="#0A0C11" stroke-width="6"/>
+</svg>
