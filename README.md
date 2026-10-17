@@ -130,8 +130,8 @@ bundle to the profile manifest, with a timestamped backup. Undo it with
 Open any session. The badge sits in the composer bar, just left of the model
 selector.
 
-**The badge** shows the current window and the time left. It updates every
-second, so the number you read is the number that is true.
+**The badge** shows the current window and the time left. It recalculates every
+second, so it never drifts.
 
 **The panel** opens on click:
 
@@ -194,28 +194,28 @@ The second Los Angeles window crosses local midnight. The panel prints it as
 that is what your clock does.
 
 The timezone comes from the operating system or browser. It is read when the
-Harness window loads, so after a flight or a manual timezone change, refresh the
-window.
+badge appears, so after a flight or a manual timezone change, refresh the window.
 
 ## The holiday calendar
 
 Chinese public holidays are off-peak all day. The plugin ships the official 2026
 schedule from
-[国办发明电〔2025〕7号](https://www.gov.cn/zhengce/content/202511/content_7047090.htm):
+[国办发明电〔2025〕7号](https://www.gov.cn/gongbao/2025/issue_12406/202511/content_7048922.html):
 
 | Holiday | Dates |
 | --- | --- |
-| New Year's Day | 1 January – 3 January |
-| Spring Festival | 15 February – 23 February |
-| Qingming | 4 April – 6 April |
-| Labour Day | 1 May – 5 May |
-| Dragon Boat | 19 June – 21 June |
-| Mid-Autumn | 25 September – 27 September |
-| National Day | 1 October – 7 October |
+| New Year's Day | 1 to 3 January |
+| Spring Festival | 15 to 23 February |
+| Qingming | 4 to 6 April |
+| Labour Day | 1 to 5 May |
+| Dragon Boat | 19 to 21 June |
+| Mid-Autumn | 25 to 27 September |
+| National Day | 1 to 7 October |
 
-Make-up workdays (14 February, 28 February, 9 May, 20 September, 10 October in
-2026) are weekends. The policy is Monday to Friday, so they stay off-peak and the
-plugin does not treat them as working days.
+China designates 14 February, 28 February, 9 May, 20 September, and 10 October in
+2026 as make-up workdays. They fall on a Saturday or Sunday, so the Monday to
+Friday policy leaves them off-peak. The plugin does not treat them as working
+days.
 
 The State Council publishes the next year's schedule each November. When it
 does, add the spans to `HOLIDAYS` in [`lib/client.js`](lib/client.js) and update
@@ -247,14 +247,14 @@ keeps working.
 node --test
 ```
 
-Thirteen tests, no dependencies:
+The suite runs with `node --test` and has no dependencies:
 
-- **Engine** (`test/engine.test.mjs`) covers window boundaries, the Friday to
-  Monday carry, holidays, timezone conversion, the fallback, 25-hour DST days,
-  and duration formatting. Every case uses a fixed instant, so the suite is
-  deterministic.
-- **Wiring** asserts the locale dictionaries and the slot registration that the
-  browser half contributes.
+- **Engine and wiring** (`test/engine.test.mjs`) cover window boundaries, the
+  Friday to Monday carry, holidays, timezone conversion, the fallback, 25-hour
+  DST days, duration formatting, the locale dictionaries, and the slot
+  registration. Every case uses a fixed instant, so the suite is deterministic.
+- **Packaging** (`test/manifest.test.mjs`) checks the manifest, the bundle patch,
+  the client registration id, and every image path in this README.
 
 The preview images in this README are rendered from the shipped component with
 the Harness theme tokens. The banner art is generated with an image model and
@@ -267,14 +267,14 @@ No. It reads the clock and the published policy. Billing stays with DeepSeek.
 
 **Why is peak at 04:00 for me?**
 Because the policy is written in UTC. 01:00 UTC is 04:00 in Jerusalem. The panel
-shows both the local schedule and the Beijing time it came from.
+shows the schedule in your zone and the current time in Beijing next to it.
 
 **Why did the countdown jump by an hour?**
 Daylight saving time ended or started in your zone. The windows are fixed
 instants; your wall clock is not.
 
 **I'm travelling. Will it follow me?**
-It follows the timezone your operating system reports when the window loads.
+It follows the timezone your operating system reports when the badge appears.
 Refresh after the change.
 
 **Why does it say Beijing time?**
@@ -286,8 +286,8 @@ The official schedule is not published yet. The weekday rule still applies. Add
 the new spans when the notice lands, or open an issue and I will.
 
 **Can I turn it off?**
-Remove the plugin from the Plugins page, or disable the `peak-hours` bundle in
-the profile patch. The composer returns to its stock layout.
+Remove the plugin from the Plugins page, or run `scripts/uninstall-dev.sh` for a
+linked checkout. The composer returns to its stock layout.
 
 **Does it work in the browser-only Web UI?**
 Yes. It computes everything locally, so there is no Host route to reach.
