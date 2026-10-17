@@ -232,4 +232,6 @@ test('duration formatting stays legible at every scale', () => {
   assert.equal(engine.formatLong((2 * 3600 + 14 * 60 + 8) * 1000), '2h 14m')
   assert.equal(engine.formatLong((43 * 60 + 12) * 1000), '43m 12s')
   assert.equal(engine.formatLong(48 * 1000), '48s')
+  assert.equal(engine.formatLong(34 * 3600 * 1000 + 24 * 60 * 1000), '1d 10h')
+  assert.equal(engine.formatLong(48 * 3600 * 1000), '2d')
 })
