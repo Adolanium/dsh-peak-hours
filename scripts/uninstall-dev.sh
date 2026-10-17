@@ -1,26 +1,26 @@
 #!/bin/sh
-# Remove the development link and restore the profile manifest.
+# Remove the development link and its Loader entry.
 set -eu
 
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 PROFILE_DIR="${DSH_PROFILE_DIR:-$HOME/.dsh/profiles/desktop}"
-MANIFEST="$PROFILE_DIR/package.json"
+PATCH="$PROFILE_DIR/cordis.patch.yml"
 PACKAGE="dsh-peak-hours"
 
 if [ -L "$PROFILE_DIR/node_modules/$PACKAGE" ]; then
   rm "$PROFILE_DIR/node_modules/$PACKAGE"
 fi
 
-if [ -f "$MANIFEST" ]; then
-  node - "$MANIFEST" "$PACKAGE" <<'NODE'
+if [ -f "$PATCH" ]; then
+  node - "$PATCH" "$PACKAGE" <<'NODE'
 const { readFileSync, writeFileSync } = require('node:fs')
-const [manifestPath, packageName] = process.argv.slice(2)
-const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'))
-const bundles = manifest?.dsh?.profile?.bundles
-if (Array.isArray(bundles)) {
-  manifest.dsh.profile.bundles = bundles.filter((name) => name !== packageName)
-  writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
-}
+const [patchPath, packageName] = process.argv.slice(2)
+let patch = readFileSync(patchPath, 'utf8')
+const withComment = `\n# ${packageName} development link (scripts/install-dev.sh)\n- insert:\n    - id: peak-hours\n      name: ${packageName}\n`
+const bare = `\n- insert:\n    - id: peak-hours\n      name: ${packageName}\n`
+if (patch.includes(withComment)) patch = patch.replace(withComment, '')
+else if (patch.includes(bare)) patch = patch.replace(bare, '')
+writeFileSync(patchPath, patch)
 NODE
 fi
 

@@ -118,8 +118,8 @@ cd dsh-peak-hours
 ```
 
 That links the checkout into `~/.dsh/profiles/desktop/node_modules` and adds the
-bundle to the profile manifest, with a timestamped backup. Undo it with
-`./scripts/uninstall-dev.sh`.
+plugin's Loader entry to the profile patch, with a timestamped backup. Undo it
+with `./scripts/uninstall-dev.sh`.
 
 > The profile reloads configuration live, so the Host half activates without a
 > restart. The browser half is loaded lazily: refresh the window for code

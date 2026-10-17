@@ -4,34 +4,34 @@ set -eu
 
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 PROFILE_DIR="${DSH_PROFILE_DIR:-$HOME/.dsh/profiles/desktop}"
-MANIFEST="$PROFILE_DIR/package.json"
+PATCH="$PROFILE_DIR/cordis.patch.yml"
 PACKAGE="dsh-peak-hours"
 
-if [ ! -f "$MANIFEST" ]; then
-  echo "No profile manifest at $MANIFEST" >&2
+if [ ! -f "$PATCH" ]; then
+  echo "No profile patch at $PATCH" >&2
   echo "Start DeepSeek Harness once, or set DSH_PROFILE_DIR to another profile." >&2
   exit 1
 fi
 
+for required in package.json lib/index.js lib/client.js cordis.patch.yml; do
+  if [ ! -f "$ROOT/$required" ]; then
+    echo "Not a complete plugin checkout: missing $required" >&2
+    exit 1
+  fi
+done
+
 mkdir -p "$PROFILE_DIR/node_modules"
 ln -sfn "$ROOT" "$PROFILE_DIR/node_modules/$PACKAGE"
 
-STAMP=$(date +%Y%m%d-%H%M%S)
-cp "$MANIFEST" "$MANIFEST.backup-$STAMP"
+if grep -q "name: $PACKAGE" "$PATCH"; then
+  echo "Loader entry already present in $PATCH"
+else
+  STAMP=$(date +%Y%m%d-%H%M%S)
+  cp "$PATCH" "$PATCH.bak-$STAMP"
+  printf '\n# %s development link (scripts/install-dev.sh)\n- insert:\n    - id: peak-hours\n      name: %s\n' "$PACKAGE" "$PACKAGE" >> "$PATCH"
+  echo "Added the Loader entry to $PATCH (backup: $PATCH.bak-$STAMP)"
+fi
 
-node - "$MANIFEST" "$PACKAGE" <<'NODE'
-const { readFileSync, writeFileSync } = require('node:fs')
-const [manifestPath, packageName] = process.argv.slice(2)
-const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'))
-manifest.dsh = manifest.dsh || {}
-manifest.dsh.profile = manifest.dsh.profile || {}
-const bundles = manifest.dsh.profile.bundles || []
-if (!bundles.includes(packageName)) bundles.push(packageName)
-manifest.dsh.profile.bundles = bundles
-writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
-NODE
-
-echo "Linked $ROOT"
-echo "Added $PACKAGE to $MANIFEST (backup: package.json.backup-$STAMP)"
 echo
-echo "Restart DeepSeek Harness, then refresh the window (Cmd+R) to load the badge."
+echo "Linked $ROOT"
+echo "Next: restart DeepSeek Harness if the Host does not reload the patch, then refresh the window (Cmd+R)."
