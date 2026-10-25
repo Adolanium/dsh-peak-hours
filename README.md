@@ -105,7 +105,7 @@ the window.
 Pin the install to this release:
 
 ```sh
-dsh plugin --profile desktop add github:Adolanium/dsh-peak-hours#v0.1.0
+dsh plugin --profile desktop add github:Adolanium/dsh-peak-hours#v0.1.1
 ```
 
 Remove it with:
