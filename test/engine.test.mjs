@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs'
 const SOURCE = readFileSync(new URL('../lib/client.js', import.meta.url), 'utf8')
 
 /** Load the browser bundle the way the Web client module loader does. */
-function loadPlugin() {
+function loadPlugin(react = { createElement: () => null }) {
   let captured = null
   const fakeWindow = {
     __ModuleLoader__: {
@@ -19,11 +19,6 @@ function loadPlugin() {
   assert.ok(captured !== null, 'the module registers itself with the loader')
   assert.equal(captured.id, 'dsh-peak-hours')
 
-  const react = {
-    createElement() {
-      return null
-    },
-  }
   const module = captured.factory((specifier) => {
     if (specifier === 'react') return react
     throw new Error(`unexpected browser module: ${specifier}`)
@@ -33,6 +28,37 @@ function loadPlugin() {
 
 const plugin = loadPlugin()
 const engine = plugin.__internals.engine
+
+/**
+ * One-pass React stub: enough to execute the badge for a single render so the
+ * gating decision can be asserted without a browser or a reconciler. Hooks
+ * return their initial value and never schedule an update.
+ */
+function hookStub() {
+  return {
+    createElement: (type, props, ...children) => ({ type, props, children }),
+    useState: (initial) => [typeof initial === 'function' ? initial() : initial, () => {}],
+    useMemo: (compute) => compute(),
+    useCallback: (callback) => callback,
+    useRef: (initial) => ({ current: initial }),
+    useEffect: () => {},
+    useLayoutEffect: () => {},
+    useSyncExternalStore: (_subscribe, read) => read(),
+    useId: () => 'test',
+  }
+}
+
+/** The model-directory service face the badge consumes. */
+function directoryService(current) {
+  const snapshot = { current }
+  return {
+    directoryFor() {
+      return {
+        store: { getSnapshot: () => snapshot, subscribe: () => () => {} },
+      }
+    },
+  }
+}
 
 const AT = (iso) => Date.parse(iso)
 const JERUSALEM = { zone: 'Asia/Jerusalem', locale: 'en-GB' }
@@ -47,13 +73,14 @@ function hhmm(ms, zone = 'Asia/Jerusalem') {
 
 test('the bundle exposes the host contract', () => {
   assert.equal(typeof plugin.apply, 'function')
-  assert.deepEqual(plugin.inject, ['slots', 'locale'])
+  assert.deepEqual(plugin.inject, ['slots', 'locale', 'modelDirectories'])
   assert.equal(plugin.NS, 'plugin.peakHours')
 })
 
 test('the widget registers into the composer bar, left of the model selector', () => {
   const registered = []
   let dictionary = null
+  const modelDirectories = { directoryFor: () => null }
 
   const ctx = {
     effect(fn) {
@@ -65,6 +92,7 @@ test('the widget registers into the composer bar, left of the model selector', (
         return () => {}
       },
     },
+    modelDirectories,
     slots: {
       inject(key, callback) {
         assert.equal(key, 'conversation.input.right')
@@ -89,6 +117,97 @@ test('the widget registers into the composer bar, left of the model selector', (
   assert.equal(options.id, 'plugin.peak-hours')
   assert.equal(options.locale, 'plugin.peakHours')
   assert.equal(typeof component, 'function')
+})
+
+test('only DeepSeek direct routes are eligible for the badge', () => {
+  const { isDirectProvider, DIRECT_PROVIDERS } = plugin.__internals
+  assert.deepEqual(DIRECT_PROVIDERS, ['deepseek-official', 'deepseek-account'])
+
+  assert.equal(isDirectProvider('deepseek-official'), true)
+  assert.equal(isDirectProvider('deepseek-account'), true)
+
+  // Third-party providers that merely host a DeepSeek model bill on their own
+  // terms; so does a hand-declared gateway under a custom provider id.
+  for (const provider of ['kimi-coding', 'openrouter', 'deepseek', 'zai', 'anthropic', '']) {
+    assert.equal(isDirectProvider(provider), false, `${provider || '(empty)'} is not direct`)
+  }
+  assert.equal(isDirectProvider(undefined), false)
+  assert.equal(isDirectProvider(null), false)
+})
+
+test('a directory snapshot yields its selected provider or nothing', () => {
+  const { providerOf } = plugin.__internals
+  assert.equal(providerOf({ current: { provider: 'deepseek-official', model: 'deepseek-flash' } }), 'deepseek-official')
+  assert.equal(providerOf({ current: { provider: 'deepseek-account', model: 'deepseek-v4-pro' } }), 'deepseek-account')
+  assert.equal(providerOf({ current: null }), null)
+  assert.equal(providerOf({ current: {} }), null)
+  assert.equal(providerOf({}), null)
+  assert.equal(providerOf(null), null)
+  assert.equal(providerOf(undefined), null)
+})
+
+test('the badge is absent while a third-party provider is selected', () => {
+  const { PeakPill } = loadPlugin(hookStub()).__internals
+  const render = (provider) =>
+    PeakPill({
+      t: (key) => key,
+      sessionId: 'session-1',
+      modelDirectories: directoryService({ provider, model: 'some-model' }),
+      useProjection: () => ({ next: { provider, model: 'some-model' } }),
+    })
+
+  for (const provider of ['kimi-coding', 'openrouter', 'zai', 'deepseek', 'anthropic']) {
+    assert.equal(render(provider), null, `${provider} must not claim DeepSeek pricing`)
+  }
+})
+
+test('the badge is present for both DeepSeek direct routes', () => {
+  const { PeakPill } = loadPlugin(hookStub()).__internals
+  const render = (provider) =>
+    PeakPill({
+      t: (key) => key,
+      sessionId: 'session-1',
+      modelDirectories: directoryService({ provider, model: 'deepseek-flash' }),
+      useProjection: () => ({ next: { provider, model: 'deepseek-flash' } }),
+    })
+
+  const apiKeyRoute = render('deepseek-official')
+  assert.ok(apiKeyRoute !== null)
+  assert.equal(apiKeyRoute.type, 'div')
+  assert.ok(render('deepseek-account') !== null)
+})
+
+test('an idle directory falls back to the durable selection', () => {
+  const { PeakPill } = loadPlugin(hookStub()).__internals
+  const base = { t: (key) => key, sessionId: 'session-1' }
+
+  // The catalog has not loaded yet, but the Session remembers a direct route.
+  const direct = PeakPill({
+    ...base,
+    modelDirectories: directoryService(null),
+    useProjection: () => ({ next: { provider: 'deepseek-official', model: 'deepseek-flash' } }),
+  })
+  assert.ok(direct !== null)
+
+  // Remembered third-party route: still absent.
+  const thirdParty = PeakPill({
+    ...base,
+    modelDirectories: directoryService(null),
+    useProjection: () => ({ next: { provider: 'kimi-coding', model: 'k3' } }),
+  })
+  assert.equal(thirdParty, null)
+
+  // Nothing known at all: absent rather than an unproven Off-peak.
+  assert.equal(PeakPill({ ...base, modelDirectories: directoryService(null) }), null)
+  assert.equal(PeakPill({ ...base, modelDirectories: null }), null)
+  assert.equal(
+    PeakPill({
+      ...base,
+      modelDirectories: { directoryFor() { throw new Error('no binding') } },
+      useProjection: () => undefined,
+    }),
+    null,
+  )
 })
 
 test('a weekend is off-peak until the next Beijing weekday opens', () => {

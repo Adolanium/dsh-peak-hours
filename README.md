@@ -34,6 +34,11 @@ and how long the current window has left. Click it and you get the day as a
 clock face, the schedule in your own timezone, and the exact moment the price
 changes.
 
+The badge only appears while the session's selected model is served by DeepSeek
+itself — the **DeepSeek** and **DeepSeek Account** provider groups. A model
+routed through another provider bills on that provider's terms, so the plugin
+never tells you it is off-peak on DeepSeek's schedule.
+
 | | Peak | Off-peak |
 | --- | --- | --- |
 | Rate | full price | **half price** |
@@ -130,6 +135,11 @@ with `./scripts/uninstall-dev.sh`.
 Open any session. The badge sits in the composer bar, just left of the model
 selector.
 
+It follows the model selector: pick a model from **DeepSeek** or **DeepSeek
+Account** and the badge appears; pick a model from any other provider and it
+stays out of the way. On a fresh session it follows the default model the
+composer shows.
+
 **The badge** shows the current window and the time left. It recalculates every
 second, so it never drifts.
 
@@ -173,7 +183,12 @@ Three rules keep it honest:
    plugin falls back to Beijing time and labels the panel `Beijing time ·
    fallback`. It never presents a guess as your local time.
 
-The badge is one registration in `conversation.input.right`. It uses the
+The badge is one registration in `conversation.input.right`. It reads the
+composer's own model directory — the same store the model selector renders
+from, including the catalog default before a session has picked a model — and
+renders only when that selection is a DeepSeek direct route
+(`deepseek-official` or `deepseek-account`). A session that remembers a direct
+selection still counts when the model catalog cannot be read. It uses the
 Harness theme tokens for every surface and text color, so it follows your
 theme, including custom ones. There is no Host route, no network request, and
 no state written to disk.
@@ -225,6 +240,11 @@ rule.
 ## What it does not do
 
 - It does not change what you pay or which model you use.
+- It does not claim DeepSeek's window for another provider: with a non-DeepSeek
+  model selected, the badge is absent.
+- It cannot see where a DeepSeek route points. If `deepseek-official` is
+  configured with a custom `baseURL`, the browser still sees the DeepSeek
+  provider and the badge follows DeepSeek's published schedule.
 - It does not call the DeepSeek API, and it does not store your usage.
 - It does not add a route, an event, or a background process.
 - It does not need a build step, a bundler, or a dependency.
@@ -236,6 +256,9 @@ rule.
 - Chromium 111 or newer, for `color-mix()` in the theme surfaces.
 - One public slot: `conversation.input.right`. Theme tokens only; no Harness
   primitives, no monkey-patching, no DOM outside the component.
+- Reads the composer's model directory (`modelDirectories`) and the session's
+  `modelSelection` projection. If neither resolves a model, the badge stays
+  absent rather than guessing.
 
 Developer preview means breaking changes. If a release moves the slot, the
 plugin fails soft: the registration disappears and the rest of the composer
@@ -251,8 +274,10 @@ The suite runs with `node --test` and has no dependencies:
 
 - **Engine and wiring** (`test/engine.test.mjs`) cover window boundaries, the
   Friday to Monday carry, holidays, timezone conversion, the fallback, 25-hour
-  DST days, duration formatting, the locale dictionaries, and the slot
-  registration. Every case uses a fixed instant, so the suite is deterministic.
+  DST days, duration formatting, the locale dictionaries, the slot
+  registration, and the provider gate (direct routes render, third-party and
+  unknown selections do not). Every case uses a fixed instant, so the suite is
+  deterministic.
 - **Packaging** (`test/manifest.test.mjs`) checks the manifest, the bundle patch,
   the client registration id, and every image path in this README.
 
@@ -264,6 +289,11 @@ composed with the wordmark.
 
 **Does this change my bill?**
 No. It reads the clock and the published policy. Billing stays with DeepSeek.
+
+**Why did the badge disappear when I switched models?**
+It only appears for models DeepSeek serves directly — the **DeepSeek** and
+**DeepSeek Account** groups. Another provider invoices on its own terms, so a
+DeepSeek off-peak claim would describe a bill you are not paying.
 
 **Why is peak at 04:00 for me?**
 Because the policy is written in UTC. 01:00 UTC is 04:00 in Jerusalem. The panel

@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.1
+
+- The badge now appears only when the session's selected model comes from a
+  DeepSeek direct route (`deepseek-official` or `deepseek-account`). With any
+  other provider selected it renders nothing, because DeepSeek's peak /
+  off-peak pricing does not apply to that provider's bill.
+- The gate follows the composer's model directory, so it tracks model switches
+  and the catalog default on a fresh session, and falls back to the session's
+  durable `modelSelection` projection when the catalog cannot be read.
+
 ## 0.1.0
 
 First release.

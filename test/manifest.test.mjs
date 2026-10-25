@@ -15,6 +15,11 @@ test('the manifest is installable as a DSH bundle', () => {
   assert.equal(manifest.exports['./client'].default, './lib/client.js')
   assert.equal(manifest.dsh.bundle.patch, './cordis.patch.yml')
   assert.equal(manifest.dsh.client.platform, 'web')
+  // The badge reads the composer's model directory, owned by the model selector.
+  assert.deepEqual(manifest.dsh.client.inject, [
+    '@deepseek-ai/dsh-client-ui-conversation',
+    '@deepseek-ai/dsh-client-ui-model-selection',
+  ])
 
   for (const path of ['lib/index.js', 'lib/client.js', 'cordis.patch.yml']) {
     assert.ok(existsSync(resolve(root, path)), `${path} exists`)

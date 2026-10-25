@@ -1,7 +1,7 @@
 {
   "name": "dsh-peak-hours",
-  "version": "0.1.0",
-  "description": "Peak and off-peak awareness for DeepSeek Harness: a live composer badge with the time left in the current pricing window, converted to your own timezone. Community plugin, not official.",
+  "version": "0.1.1",
+  "description": "Peak and off-peak awareness for DeepSeek Harness: a live composer badge with the time left in the current pricing window, converted to your own timezone, shown only for DeepSeek's direct routes. Community plugin, not official.",
   "type": "module",
   "main": "lib/index.js",
   "exports": {
@@ -34,7 +34,8 @@
     "client": {
       "platform": "web",
       "inject": [
-        "@deepseek-ai/dsh-client-ui-conversation"
+        "@deepseek-ai/dsh-client-ui-conversation",
+        "@deepseek-ai/dsh-client-ui-model-selection"
       ]
     }
   },
